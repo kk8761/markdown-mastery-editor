@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Markdown Mastery</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0d1117;
+      --bg-secondary: #161b22;
+      --bg-card: #1c2128;
+      --accent-color: #58a6ff;
+      --font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-family);
+      background: var(--bg-primary);
+      color: white;
+      box-sizing: border-box;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .theme-selector {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+
+    .theme-option {
+      background: var(--bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      margin-right: 0.5rem;
+      backdrop-filter: blur(10px);
+    }
+
+    .theme-option:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .editor-container {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .markdown-editor {
+      flex: 1;
+      padding: 1rem;
+      background: var(--bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      resize: none;
+    }
+
+    .preview-container {
+      flex: 1;
+      padding: 1rem;
+      background: var(--bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      white-space: pre-wrap;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .editor-container {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>Markdown Mastery</h1>
+    </header>
+    <div class="theme-selector"></div>
+    <div class="editor-container">
+      <textarea id="markdown-editor" placeholder="Write your markdown here..."></textarea>
+      <pre id="preview"></pre>
+    </div>
+  </div>
+
+  <script>
+    const editor = document.getElementById('markdown-editor');
+    const preview = document.getElementById('preview');
+    const themeSelector = document.querySelector('.theme-selector');
+
+    async function getThemes() {
+      try {
+        const response = await fetch('/api/themes');
+        if (!response.ok) throw new Error('Failed to load themes.');
+        return await response.json();
+      } catch (error) {
+        console.error(error);
+        alert('Error loading themes.');
+      }
+    }
+
+    async function saveMarkdown(content) {
+      try {
+        const response = await fetch('/api/markdown', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content })
+        });
+        if (!response.ok) throw new Error('Failed to save markdown.');
+        alert('Markdown saved successfully!');
+      } catch (error) {
+        console.error(error);
+        alert('Error saving markdown.');
+      }
+    }
+
+    function updatePreview() {
+      const markdown = editor.value;
+      preview.innerHTML = marked.parse(markdown);
+    }
+
+    async function init() {
+      const themes = await getThemes();
+      if (!themes || !Array.isArray(themes)) return;
+
+      themes.forEach(theme => {
+        const option = document.createElement('div');
+        option.classList.add('theme-option');
+        option.textContent = theme.name;
+        option.addEventListener('click', () => {
+          // Apply the selected theme
+        });
+        themeSelector.appendChild(option);
+      });
+
+      editor.addEventListener('input', updatePreview);
+      updatePreview();
+    }
+
+    init();
+
+    window.addEventListener('beforeunload', (event) => {
+      const content = editor.value;
+      saveMarkdown(content);
+    });
+  </script>
+</body>
+</html>
